@@ -1,0 +1,524 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="claude:viewport-fit-sides" content="cover">
+<title>שברים בכיף</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;600;800&family=Rubik:wght@600;800&display=swap">
+<style>
+/* Layout: one calm column, big tappable cards, math shown left-to-right inside an RTL page */
+:root{
+  --bg:#f1f7f6; --card:#ffffff; --ink:#15303a; --muted:#587480; --line:#d3e3e0;
+  --accent:#0f9d8a; --accent-ink:#ffffff; --sun:#ffb81f; --ok:#1c8f4e; --bad:#d6403f; --okbg:#e3f6ea; --badbg:#fdebea; --hintbg:#fff6dc;
+  --a:#f59e0b; --b:#3b82f6; --empty:#e9f0ef; --barline:#8aa3a8;
+  --l1:#e08a00; --l2:#d9507a; --l3:#2f7bea; --l4:#7c5fd0; --l5:#0f9d8a; --l6:#d6403f;
+  --font:"Heebo","Segoe UI",Arial,sans-serif; --display:"Rubik","Heebo",Arial,sans-serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0e1b1f; --card:#162a30; --ink:#e8f3f1; --muted:#9db6b9; --line:#2a444c;
+  --accent:#3dd1bb; --accent-ink:#08201c; --ok:#52d68a; --bad:#ff7b78; --okbg:#143a26; --badbg:#44191a; --hintbg:#3b3414;
+  --a:#fbbf24; --b:#6ea8ff; --empty:#203840; --barline:#6b8d94;
+  --l1:#ffb340; --l2:#ff82a6; --l3:#6ea8ff; --l4:#a68cff; --l5:#3dd1bb; --l6:#ff7b78; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0e1b1f; --card:#162a30; --ink:#e8f3f1; --muted:#9db6b9; --line:#2a444c;
+  --accent:#3dd1bb; --accent-ink:#08201c; --ok:#52d68a; --bad:#ff7b78; --okbg:#143a26; --badbg:#44191a; --hintbg:#3b3414;
+  --a:#fbbf24; --b:#6ea8ff; --empty:#203840; --barline:#6b8d94;
+  --l1:#ffb340; --l2:#ff82a6; --l3:#6ea8ff; --l4:#a68cff; --l5:#3dd1bb; --l6:#ff7b78; color-scheme:dark}
+
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--font);font-size:17px;line-height:1.5;
+  padding-block:16px 40px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+#app{max-width:640px;margin:0 auto;display:flex;flex-direction:column;gap:16px}
+h1,h2,h3{font-family:var(--display);margin:0;line-height:1.2;text-wrap:balance}
+p{margin:0}
+button{font:inherit;cursor:pointer;border:0;color:inherit}
+button:focus-visible,input:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.ltr{direction:ltr;display:inline-block;unicode-bidi:isolate}
+
+/* fractions */
+.fr{display:inline-flex;flex-direction:column;align-items:center;vertical-align:middle;line-height:1.1;font-weight:700;margin:0 .12em;direction:ltr}
+.fr i{font-style:normal;padding:0 .22em}
+.fr i:first-child{border-bottom:.09em solid currentColor}
+.mx{display:inline-flex;align-items:center;gap:.06em;direction:ltr;vertical-align:middle}
+.mx .w{font-weight:700}
+.num{font-weight:700}
+.expr{direction:ltr;display:flex;flex-wrap:wrap;justify-content:center;align-items:center;gap:.35em;font-size:clamp(26px,7.4vw,42px);padding:8px 0;max-width:100%}
+.op{font-weight:600;color:var(--muted);padding:0 .1em}
+.blank{display:inline-grid;place-items:center;width:1.3em;height:1.5em;border:.07em dashed var(--accent);border-radius:.3em;color:var(--accent);font-weight:700}
+
+/* header */
+.top{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.who{display:flex;align-items:center;gap:12px;min-width:0}
+.owl{font-size:42px;line-height:1}
+.who h1{font-size:28px}
+.who p{color:var(--muted);font-size:15px}
+.stats{display:flex;gap:8px;align-items:center}
+.pill{background:var(--card);border:1px solid var(--line);border-radius:99px;padding:4px 12px;font-weight:600;white-space:nowrap}
+.icon-btn{background:var(--card);border:1px solid var(--line);border-radius:99px;width:38px;height:38px;font-size:18px}
+
+/* generic */
+.card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:18px}
+.solid,.ghost{border-radius:14px;padding:10px 18px;font-weight:800;min-height:46px}
+.solid{background:var(--accent);color:var(--accent-ink)}
+.ghost{background:transparent;border:2px solid var(--line);color:var(--ink)}
+.solid:disabled,.ghost:disabled{opacity:.45;cursor:default}
+.big{font-size:19px;padding:12px 26px}
+
+.welcome{display:flex;flex-direction:column;gap:10px}
+.welcome input{font:inherit;padding:10px 14px;border-radius:12px;border:2px solid var(--line);background:var(--bg);color:var(--ink);width:100%}
+
+/* levels */
+.levels{display:grid;gap:12px}
+.lv{--lc:var(--l1);display:grid;grid-template-columns:auto 1fr;gap:6px 14px;align-items:center;background:var(--card);border:1px solid var(--line);border-radius:18px;padding:14px}
+.lv .ic{width:58px;height:58px;border-radius:16px;display:grid;place-items:center;font-size:30px;background:color-mix(in srgb,var(--lc) 22%,var(--card))}
+.lv h3{font-size:20px}
+.lv .sub{color:var(--muted);font-size:15px}
+.lv .st{letter-spacing:2px;color:var(--sun);font-size:18px}
+.lv .st .off{color:var(--line)}
+.lv .btns{grid-column:1/-1;display:flex;gap:10px;flex-wrap:wrap}
+.lv .btns button{flex:1 1 120px}
+.lv .solid{background:var(--lc);color:#fff}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .lv .solid{color:#10202a}}
+:root[data-theme="dark"] .lv .solid{color:#10202a}
+.test{display:flex;flex-direction:column;gap:8px;border:2px dashed var(--accent)}
+
+/* lesson */
+.lesson h2{font-size:24px;margin-bottom:8px}
+.lesson .body{font-size:19px;display:flex;flex-direction:column;gap:12px}
+.dots{display:flex;gap:6px;justify-content:center}
+.dots i{width:10px;height:10px;border-radius:50%;background:var(--line)}
+.dots i.on{background:var(--accent)}
+.nav{display:flex;justify-content:space-between;gap:10px}
+.nav button{flex:1}
+.eq{direction:ltr;text-align:center;font-size:26px;display:flex;flex-wrap:wrap;gap:.3em;justify-content:center;align-items:center}
+.tip{background:var(--hintbg);border-radius:12px;padding:10px 14px;font-size:16px}
+
+/* bars */
+.viz{display:flex;flex-direction:column;gap:10px;background:var(--bg);border-radius:14px;padding:12px;direction:ltr}
+.vrow{display:flex;flex-direction:column;gap:4px}
+.vl{font-size:18px;font-weight:700}
+.vnum{display:flex;flex-direction:column;gap:5px;max-width:260px}
+.bar{width:100%;height:auto;display:block}
+
+/* quiz */
+.qtop{display:flex;align-items:center;gap:12px}
+.x{background:var(--card);border:1px solid var(--line);border-radius:50%;width:38px;height:38px;font-size:16px}
+.prog{flex:1;height:12px;border-radius:99px;background:var(--line);overflow:hidden;direction:rtl}
+.prog i{display:block;height:100%;background:var(--accent);border-radius:99px;transition:width .3s}
+.cnt{font-weight:700;color:var(--muted);min-width:3em;text-align:left}
+.qcard{display:flex;flex-direction:column;gap:14px}
+.bubble{display:flex;gap:12px;align-items:flex-start}
+.bubble .owl{font-size:36px}
+.bubble p{background:var(--bg);border-radius:6px 18px 18px 18px;padding:10px 14px;font-size:19px;flex:1;min-width:0}
+.ansrow{direction:ltr;display:flex;align-items:center;justify-content:center;gap:12px;flex-wrap:wrap}
+.ansrow input{font:inherit;font-weight:800;font-size:26px;text-align:center;width:84px;padding:8px 4px;border:3px solid var(--line);border-radius:14px;background:var(--card);color:var(--ink)}
+.fbox{display:flex;flex-direction:column;align-items:center;gap:4px}
+.fbox hr{width:100%;border:0;border-top:4px solid var(--ink);margin:0}
+.alab{font-size:13px;color:var(--muted);text-align:center;direction:rtl}
+.unit{font-weight:700;direction:rtl}
+.fld{display:flex;flex-direction:column;align-items:center;gap:2px}
+.fb{min-height:1.5em;font-weight:700;font-size:18px;border-radius:12px;padding:0}
+.fb.ok{background:var(--okbg);color:var(--ok);padding:10px 14px}
+.fb.no{background:var(--badbg);color:var(--bad);padding:10px 14px}
+.fb.warn{background:var(--hintbg);padding:10px 14px}
+.steps{display:flex;flex-direction:column;gap:8px}
+.steps div{background:var(--hintbg);border-radius:12px;padding:8px 12px;font-size:17px}
+.qbtns{display:flex;gap:10px;flex-wrap:wrap}
+.qbtns .solid{flex:2 1 160px}.qbtns .ghost{flex:1 1 100px}
+.streak{text-align:center;color:var(--muted);font-size:15px}
+
+/* result */
+.result{text-align:center;display:flex;flex-direction:column;gap:12px;align-items:center}
+.bigstars{font-size:52px;letter-spacing:6px;color:var(--sun)}
+.bigstars .off{color:var(--line)}
+.score{font-family:var(--display);font-size:34px;font-weight:800}
+.rv{background:var(--bg);border-radius:12px;padding:10px;width:100%;text-align:center}
+.rv .expr{font-size:26px}
+.rvlist{display:flex;flex-direction:column;gap:8px;width:100%}
+
+.confetti{position:fixed;inset:0;pointer-events:none;overflow:hidden;z-index:50}
+.confetti span{position:absolute;top:-30px;font-size:26px;animation:fall 1.5s ease-in forwards}
+@keyframes fall{to{transform:translate(var(--dx),105vh) rotate(300deg);opacity:.8}}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+
+<div id="app" dir="rtl"></div>
+
+<script>
+document.documentElement.lang = 'he';
+document.documentElement.dir = 'rtl';
+
+/* ---------- helpers ---------- */
+const $app = document.getElementById('app');
+const ri = (a, b) => Math.floor(Math.random() * (b - a + 1)) + a;
+const pick = a => a[ri(0, a.length - 1)];
+const shuffle = a => { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = ri(0, i); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+const fr = (n, d) => `<span class="fr"><i>${n}</i><i>${d}</i></span>`;
+const mx = (w, n, d) => `<span class="mx"><b class="w">${w}</b>${fr(n, d)}</span>`;
+const num = x => `<span class="num">${x}</span>`;
+const op = t => `<span class="op">${t}</span>`;
+const qm = '<span class="blank">?</span>';
+const ltr = h => `<span class="ltr">${h}</span>`;
+const F = (n, d) => ltr(fr(n, d));
+const M = (w, n, d) => ltr(mx(w, n, d));
+const show = (n, d) => { const w = Math.floor(n / d), r = n % d; return !r ? num(w) : (w ? mx(w, r, d) : fr(r, d)); };
+const expr = (...p) => `<div class="expr">${p.join('')}</div>`;
+const DEN = [5, 6, 7, 8, 9, 10, 11, 13, 15, 20, 23];
+const Q = o => Object.assign({ text: 'חשבי ופתרי:', expr: '', unit: '', viz: '', steps: [] }, o);
+
+/* ---------- bar drawing (like the book's strips) ---------- */
+function unitBar(d, filled, crossFrom, col) {
+  const W = 210, H = 24, w = W / d;
+  let s = `<svg class="bar" viewBox="0 0 ${W} ${H}" aria-hidden="true">`;
+  for (let i = 0; i < d; i++) {
+    const on = i < filled, cr = on && i >= crossFrom;
+    s += `<rect x="${i * w + .75}" y=".75" width="${w - 1.5}" height="${H - 1.5}" rx="2" style="fill:${on ? col : 'var(--empty)'};stroke:var(--barline)" stroke-width="1.2" opacity="${cr ? .4 : 1}"/>`;
+    if (cr) s += `<path d="M${i * w + 3} ${H - 3}L${(i + 1) * w - 3} 3" style="stroke:var(--ink)" stroke-width="1.8"/>`;
+  }
+  return s + '</svg>';
+}
+/* n parts of size 1/d; the last `cross` parts get crossed out */
+function numViz(n, d, col, cross = 0) {
+  const u = Math.ceil(n / d);
+  if (u > 6 || u < 1) return '';
+  let h = '<div class="vnum">';
+  for (let k = 0; k < u; k++) h += unitBar(d, Math.min(d, n - k * d), n - cross - k * d, col);
+  return h + '</div>';
+}
+const vrow = (label, v) => v ? `<div class="vrow"><div class="vl">${label}</div>${v}</div>` : '';
+const A = 'var(--a)', B = 'var(--b)';
+
+/* ---------- question generators ---------- */
+function genL1() {
+  const d = pick(DEN);
+  if (Math.random() < .5) {
+    const a = ri(1, d - 1), b = ri(1, d - 1), s = a + b;
+    const steps = [`מחברים את המונים ומשאירים את המכנה: ${a} + ${b} = ${s}, כלומר ${fr(s, d)}.`];
+    if (s > d) steps.push(`${fr(s, d)} גדול משלם: ${d} חלקים הם שלם אחד, ונשארו ${s - d}. התשובה: ${show(s, d)}`);
+    return Q({ expr: expr(fr(a, d), op('+'), fr(b, d), op('='), qm), ans: { n: s, d }, steps,
+      viz: vrow(fr(a, d), numViz(a, d, A)) + vrow(fr(b, d), numViz(b, d, B)) });
+  }
+  const a = ri(2, d - 1), b = ri(1, a - 1);
+  return Q({ expr: expr(fr(a, d), op('−'), fr(b, d), op('='), qm), ans: { n: a - b, d },
+    steps: [`מחסרים את המונים ומשאירים את המכנה: ${a} − ${b} = ${a - b}. התשובה: ${fr(a - b, d)}`],
+    viz: vrow(fr(a, d) + ' − ' + fr(b, d), numViz(a, d, A, b)) });
+}
+
+function genL2() {
+  const d = pick(DEN), a = ri(1, d - 1), v = ri(0, 4);
+  if (v === 0) return Q({ expr: expr(num(1), op('−'), fr(a, d), op('='), qm), ans: { n: d - a, d },
+    steps: [`שלם אחד הוא ${fr(d, d)}.`, `${fr(d, d)} − ${fr(a, d)} = ${fr(d - a, d)}. התשובה: ${fr(d - a, d)}`], viz: vrow('1 − ' + fr(a, d), numViz(d, d, A, a)) });
+  if (v === 1) {
+    const n = ri(2, 14), steps = [`פורקים שלם אחד לחלקים: ${n} = ${n - 1} + ${fr(d, d)}.`, `${fr(d, d)} − ${fr(a, d)} = ${fr(d - a, d)}.`, `התשובה: ${n - 1} ${fr(d - a, d)}, כלומר ${show(n * d - a, d)}`];
+    return Q({ expr: expr(num(n), op('−'), fr(a, d), op('='), qm), ans: { n: n * d - a, d }, steps, viz: n <= 5 ? vrow(n + ' − ' + fr(a, d), numViz(n * d, d, A, a)) : '' });
+  }
+  if (v === 2) return Q({ text: 'מה המספר החסר?', expr: expr(fr(a, d), op('+'), qm, op('='), num(1)), ans: { n: d - a, d },
+    steps: [`שלם אחד הוא ${fr(d, d)}.`, `כדי להגיע מ-${fr(a, d)} אל ${fr(d, d)} חסרים ${d} − ${a} = ${d - a} חלקים. התשובה: ${fr(d - a, d)}`] });
+  if (v === 3) { const w = ri(1, 9), b = ri(1, d - 1);
+    return Q({ text: 'מה המספר החסר?', expr: expr(mx(w, b, d), op('+'), qm, op('='), num(w + 1)), ans: { n: d - b, d },
+      steps: [`כדי להגיע משלם ושבר אל השלם הבא, משלימים את השבר ל-${fr(d, d)}.`, `${d} − ${b} = ${d - b}. התשובה: ${fr(d - b, d)}`] }); }
+  const w = ri(1, 3);
+  return Q({ expr: expr(num(w), op('+'), fr(a, d), op('='), qm), ans: { n: w * d + a, d }, steps: [`שלם ושבר כותבים יחד כמספר מעורב. התשובה: ${mx(w, a, d)}`] });
+}
+
+function genL3() {
+  const d = pick(DEN.filter(x => x >= 6)), w = Math.random() < .7 ? ri(2, 6) : ri(7, 20), v = Math.random();
+  if (v < .65) {
+    const b = ri(1, d - 2), a = ri(b + 1, d - 1), r = d + b - a;
+    return Q({ expr: expr(mx(w, b, d), op('−'), fr(a, d), op('='), qm), ans: { n: w * d + b - a, d },
+      steps: [`אי אפשר להוריד ${a} חלקים כשיש רק ${b}. פורקים שלם אחד.`, `${mx(w, b, d)} = ${w - 1} + ${fr(d + b, d)}`, `${fr(d + b, d)} − ${fr(a, d)} = ${fr(r, d)}. התשובה: ${mx(w - 1, r, d)}`],
+      viz: w <= 6 ? vrow(mx(w, b, d) + ' − ' + fr(a, d), numViz(w * d + b, d, A, a)) : '' });
+  }
+  if (v < .85) {
+    const b = ri(2, d - 1), a = ri(1, b);
+    return Q({ expr: expr(mx(w, b, d), op('−'), fr(a, d), op('='), qm), ans: { n: w * d + b - a, d },
+      steps: [`מספיק חלקים בשבר, אז מחסרים רק מהשבר: ${b} − ${a} = ${b - a}.`, `השלמים נשארים. התשובה: ${show(w * d + b - a, d)}`] });
+  }
+  const a = ri(1, d - 1);
+  return Q({ expr: expr(num(w), op('−'), fr(a, d), op('='), qm), ans: { n: w * d - a, d },
+    steps: [`פורקים שלם אחד: ${w} = ${w - 1} + ${fr(d, d)}.`, `${fr(d, d)} − ${fr(a, d)} = ${fr(d - a, d)}. התשובה: ${mx(w - 1, d - a, d)}`] });
+}
+
+function genL4() {
+  const d = pick(DEN.filter(x => x >= 6));
+  if (Math.random() < .5) {
+    const w1 = ri(1, 20), w2 = ri(1, 20), n1 = ri(1, d - 1), n2 = ri(1, d - 1), tn = n1 + n2;
+    const steps = [`מחברים שלמים: ${w1} + ${w2} = ${w1 + w2}.`, `מחברים שברים: ${fr(n1, d)} + ${fr(n2, d)} = ${fr(tn, d)}.`];
+    steps.push(tn > d ? `${fr(tn, d)} = ${show(tn, d)}, לכן מוסיפים עוד שלם. התשובה: ${show((w1 + w2) * d + tn, d)}` : `התשובה: ${show((w1 + w2) * d + tn, d)}`);
+    return Q({ expr: expr(mx(w1, n1, d), op('+'), mx(w2, n2, d), op('='), qm), ans: { n: (w1 + w2) * d + tn, d }, steps,
+      viz: w1 + w2 <= 5 ? vrow(mx(w1, n1, d), numViz(w1 * d + n1, d, A)) + vrow(mx(w2, n2, d), numViz(w2 * d + n2, d, B)) : '' });
+  }
+  const w2 = ri(1, 12), w1 = w2 + ri(1, 8), regroup = Math.random() < .65 && d > 2;
+  let n1, n2;
+  if (regroup) { n2 = ri(2, d - 1); n1 = ri(1, n2 - 1); } else { n1 = ri(2, d - 1); n2 = ri(1, n1); }
+  const ans = { n: (w1 - w2) * d + n1 - n2, d };
+  const steps = regroup
+    ? [`${n1} קטן מ-${n2}, אז פורקים שלם אחד: ${mx(w1, n1, d)} = ${w1 - 1} + ${fr(d + n1, d)}.`, `מחסרים שלמים: ${w1 - 1} − ${w2} = ${w1 - 1 - w2}.`, `מחסרים שברים: ${fr(d + n1, d)} − ${fr(n2, d)} = ${fr(d + n1 - n2, d)}. התשובה: ${show(ans.n, d)}`]
+    : [`מחסרים שלמים: ${w1} − ${w2} = ${w1 - w2}.`, `מחסרים שברים: ${fr(n1, d)} − ${fr(n2, d)} = ${fr(n1 - n2, d)}. התשובה: ${show(ans.n, d)}`];
+  return Q({ expr: expr(mx(w1, n1, d), op('−'), mx(w2, n2, d), op('='), qm), ans, steps,
+    viz: w1 <= 5 ? vrow(mx(w1, n1, d) + ' − ' + mx(w2, n2, d), numViz(w1 * d + n1, d, A, w2 * d + n2)) : '' });
+}
+
+function genL5() {
+  const name = pick(['יוחנן', 'דני', 'נועם', 'אורי', 'עומר']), t = ri(0, 6);
+  if (t === 0) { const d = pick([5, 6, 7, 8, 9, 10, 11]), a = ri(1, d - 1);
+    return Q({ text: `בקנקן היה ליטר מיץ מלא. ${name} שתה ${F(a, d)} ליטר. כמה ליטר מיץ נשארו בקנקן?`, unit: 'ליטר', ans: { n: d - a, d },
+      steps: ['"נשארו" אומר חיסור משלם אחד.', `1 − ${fr(a, d)} = ${fr(d - a, d)}`] }); }
+  if (t === 1) { const d = pick([5, 8, 10, 6, 7]), a = ri(1, d - 1), k = ri(2, 6);
+    return Q({ text: `בחנות צבעים כל מכל מכיל ${F(a, d)} ליטר צבע. איילה קנתה ${k} מכלים. כמה ליטרים קנתה בסך הכול?`, unit: 'ליטר', ans: { n: a * k, d },
+      steps: ['מכל אחד מאותו גודל שוב ושוב, אז כופלים.', `${k} × ${fr(a, d)} = ${fr(a * k, d)} = ${show(a * k, d)}`] }); }
+  if (t === 2) { const d = pick([8, 9, 10, 11, 13]), a = ri(2, d - 1), b = ri(2, d - 1);
+    return Q({ text: `עופר ערבב ${F(a, d)} ליטר צבע לבן עם ${F(b, d)} ליטר צבע אפור. כמה ליטרים של צבע בהיר הוא קיבל?`, unit: 'ליטר', ans: { n: a + b, d },
+      steps: ['"ערבב" אומר לחבר.', `${fr(a, d)} + ${fr(b, d)} = ${fr(a + b, d)} = ${show(a + b, d)}`] }); }
+  if (t === 3) { const d = pick([5, 8, 10, 12]), a = ri(2, d - 1), b = ri(1, a - 1);
+    return Q({ text: `במכל הצבע הלבן יש ${F(a, d)} ליטר, ובמכל הצבע האפור ${F(b, d)} ליטר. בכמה ליטרים כמות הצבע הלבן גדולה יותר?`, unit: 'ליטר', ans: { n: a - b, d },
+      steps: ['"בכמה גדולה יותר" אומר להפחית את הקטן מהגדול.', `${fr(a, d)} − ${fr(b, d)} = ${fr(a - b, d)}`] }); }
+  if (t === 4) { const d = pick([7, 8, 9, 6]), W = ri(3, 8), w2 = ri(1, W - 2), n2 = ri(2, d - 1), n1 = ri(1, n2 - 1), r = d + n1 - n2;
+    return Q({ text: `על הדוכן בפיצרייה היו ${M(W, n1, d)} פיצות. הלקוחות הזמינו ${M(w2, n2, d)} פיצות. כמה פיצות נשארו על הדוכן?`, unit: 'פיצות', ans: { n: (W - w2) * d + n1 - n2, d },
+      steps: [`${mx(W, n1, d)} − ${mx(w2, n2, d)}. ${n1} קטן מ-${n2}, אז פורקים שלם: ${mx(W, n1, d)} = ${W - 1} + ${fr(d + n1, d)}.`, `${W - 1} − ${w2} = ${W - 1 - w2}, ו-${fr(d + n1, d)} − ${fr(n2, d)} = ${fr(r, d)}.`, `התשובה: ${show((W - w2) * d + n1 - n2, d)}`] }); }
+  if (t === 5) { const d = pick([8, 10, 12, 15, 20]), a = ri(1, Math.floor((d - 1) / 2)), b = ri(1, d - 1 - a);
+    return Q({ text: `אמא אפתה עוגה. ביום ראשון אכלו ${F(a, d)} ממנה, וביום שני אכלו עוד ${F(b, d)}. איזה חלק מהעוגה נשאר?`, ans: { n: d - a - b, d },
+      steps: [`קודם מחברים כמה אכלו: ${fr(a, d)} + ${fr(b, d)} = ${fr(a + b, d)}.`, `העוגה כולה היא 1. 1 − ${fr(a + b, d)} = ${fr(d - a - b, d)}`] }); }
+  const d = pick([6, 8, 9, 10]), w = ri(2, 6), b = ri(1, d - 2), a = ri(b + 1, d - 1);
+  return Q({ text: `לסרט היה אורך של ${M(w, b, d)} מטר. גזרו ממנו ${F(a, d)} מטר. כמה מטרים של סרט נשארו?`, unit: 'מטר', ans: { n: w * d + b - a, d },
+    steps: [`${a} גדול מ-${b}, אז פורקים שלם: ${mx(w, b, d)} = ${w - 1} + ${fr(d + b, d)}.`, `${fr(d + b, d)} − ${fr(a, d)} = ${fr(d + b - a, d)}. התשובה: ${show(w * d + b - a, d)}`] });
+}
+
+function genL6() {
+  const v = ri(0, 4);
+  if (v === 0 || v === 1) {
+    const d = pick([5, 7, 8, 9, 10, 20]), a = ri(1, d - 1), n = v ? ri(3, 12) : (d === 20 || d === 10 ? 10 : ri(3, 12));
+    const e = v ? [num(n), op('×'), fr(a, d)] : [fr(a, d), op('×'), num(n)];
+    return Q({ expr: expr(...e, op('='), qm), ans: { n: a * n, d },
+      steps: [`כופלים את המונה במספר השלם: ${a} × ${n} = ${a * n}. המכנה נשאר ${d}.`, `${fr(a * n, d)} = ${show(a * n, d)}`] });
+  }
+  if (v === 2) { const d = pick([5, 7, 9]), w = ri(2, 9), b = ri(1, d - 1), k = ri(2, 4), c = ri(1, d - 1), tot = w * d + b + k * c;
+    return Q({ expr: expr(mx(w, b, d), op('+'), num(k), op('×'), fr(c, d), op('='), qm), ans: { n: tot, d },
+      steps: ['כפל קודם לחיבור.', `${k} × ${fr(c, d)} = ${fr(k * c, d)}.`, `${mx(w, b, d)} + ${fr(k * c, d)}. התשובה: ${show(tot, d)}`] }); }
+  if (v === 3) { const d = pick([5, 7, 8]), x = ri(1, 4), y = ri(1, d - 1), z = ri(1, d - 1), w = x + ri(3, 6), inner = x * d + y + z;
+    return Q({ expr: expr(num(w), op('−'), '(', mx(x, y, d), op('+'), fr(z, d), ')', op('='), qm), ans: { n: w * d - inner, d },
+      steps: ['סוגריים קודם.', `${mx(x, y, d)} + ${fr(z, d)} = ${show(inner, d)}.`, `${w} − ${show(inner, d)}. התשובה: ${show(w * d - inner, d)}`] }); }
+  const d = pick([5, 7, 9]), a = ri(1, d - 1), w = ri(2, 8), b = ri(1, d - 1);
+  return Q({ expr: expr('(', fr(a, d), op('+'), fr(d - a, d), ')', op('×'), mx(w, b, d), op('='), qm), ans: { n: w * d + b, d },
+    steps: ['סוגריים קודם.', `${fr(a, d)} + ${fr(d - a, d)} = ${fr(d, d)} = 1.`, `מכפילים ב-1 ולא משנים כלום. התשובה: ${mx(w, b, d)}`] });
+}
+
+/* ---------- levels & lessons ---------- */
+const LEVELS = [
+  { id: 1, icon: '🍕', title: 'אותו מכנה', sub: 'חיבור וחיסור שברים פשוטים', gen: genL1, lesson: () => [
+    { t: 'מה זה שבר?', p: `שלם מחולק לחלקים שווים. המכנה אומר לכמה חלקים חילקנו, והמונה אומר כמה חלקים צבענו.<div class="eq">${fr(3, 7)}</div>`, v: vrow(fr(3, 7), numViz(3, 7, A)) },
+    { t: 'חיבור: המכנה נשאר', p: `כשהמכנים שווים, מחברים רק את המונים.<div class="eq">${fr(2, 9)} + ${fr(3, 9)} = ${fr(5, 9)}</div>`, v: vrow(fr(2, 9), numViz(2, 9, A)) + vrow(fr(3, 9), numViz(3, 9, B)) },
+    { t: 'כשהסכום גדול מ-1', p: `${fr(7, 9)} + ${fr(3, 9)} = ${fr(10, 9)}. מ-${fr(10, 9)} אפשר למלא שלם אחד (9 חלקים) ונשאר חלק אחד.<div class="eq">${fr(10, 9)} = ${mx(1, 1, 9)}</div>`, v: vrow(fr(10, 9), numViz(10, 9, A)) },
+    { t: 'חיסור: מוחקים חלקים', p: `מחסרים את המונים והמכנה נשאר.<div class="eq">${fr(7, 9)} − ${fr(3, 9)} = ${fr(4, 9)}</div>`, v: vrow(fr(7, 9), numViz(7, 9, A, 3)) } ] },
+  { id: 2, icon: '🧩', title: 'משלימים לשלם', sub: '1 − שבר, והמספר החסר', gen: genL2, lesson: () => [
+    { t: 'שלם אחד הוא כל החלקים', p: `אם חילקנו לשביעיות, שלם אחד הוא ${fr(7, 7)}. לכן:<div class="eq">1 − ${fr(4, 7)} = ${fr(7, 7)} − ${fr(4, 7)} = ${fr(3, 7)}</div>`, v: vrow('1 − ' + fr(4, 7), numViz(7, 7, A, 4)) },
+    { t: 'מחסירים משלם גדול', p: `<div class="eq">2 − ${fr(4, 7)}</div>פורקים שלם אחד לשביעיות: 2 = 1 + ${fr(7, 7)}. מחסרים ${fr(4, 7)} מ-${fr(7, 7)} ונשאר ${fr(3, 7)}.<div class="eq">2 − ${fr(4, 7)} = ${mx(1, 3, 7)}</div>`, v: vrow('2 − ' + fr(4, 7), numViz(14, 7, A, 4)) },
+    { t: 'המספר החסר', p: `<div class="eq">${fr(3, 5)} + ${qm} = 1</div>שואלים: כמה חסר ל-${fr(5, 5)}? חסרים 5 − 3 = 2 חלקים.<div class="eq">${fr(3, 5)} + ${fr(2, 5)} = 1</div>`, v: vrow(fr(3, 5), numViz(3, 5, A)) + vrow('?', numViz(2, 5, B)) } ] },
+  { id: 3, icon: '🔓', title: 'פורקים שלם', sub: 'מספר מעורב פחות שבר', gen: genL3, lesson: () => [
+    { t: 'מה עושים כשאין מספיק חלקים?', p: `<div class="eq">${mx(5, 3, 8)} − ${fr(5, 8)}</div>יש רק 3 שמיניות ואי אפשר להוריד 5. אז פורקים שלם אחד מה-5.`, v: vrow(mx(5, 3, 8) + ' − ' + fr(5, 8), numViz(43, 8, A, 5)) },
+    { t: 'כותבים את הפירוק', p: `<div class="eq">${mx(5, 3, 8)} = 4 + ${fr(11, 8)}</div>כי שלם אחד הוא ${fr(8, 8)}, ו-${fr(8, 8)} + ${fr(3, 8)} = ${fr(11, 8)}.`, v: '' },
+    { t: 'ועכשיו מחסרים', p: `<div class="eq">${fr(11, 8)} − ${fr(5, 8)} = ${fr(6, 8)}</div>השלמים נשארו 4. התשובה:<div class="eq">${mx(4, 6, 8)}</div><div class="tip">ברגע שיש מספיק חלקים בשבר, לא צריך לפרק. מחסרים ישר.</div>`, v: '' } ] },
+  { id: 4, icon: '🔢', title: 'מספרים מעורבים', sub: 'חיבור וחיסור שלמים עם שברים', gen: genL4, lesson: () => [
+    { t: 'חיבור מספרים מעורבים', p: `מחברים שלמים לחוד ושברים לחוד.<div class="eq">${mx(3, 4, 9)} + ${mx(2, 6, 9)}</div>שלמים: 3 + 2 = 5. שברים: ${fr(4, 9)} + ${fr(6, 9)} = ${fr(10, 9)} = ${mx(1, 1, 9)}.<div class="eq">5 + ${mx(1, 1, 9)} = ${mx(6, 1, 9)}</div>`, v: vrow(mx(3, 4, 9), numViz(31, 9, A)) + vrow(mx(2, 6, 9), numViz(24, 9, B)) },
+    { t: 'חיסור בלי פירוק', p: `<div class="eq">${mx(5, 4, 7)} − ${mx(2, 1, 7)}</div>שלמים: 5 − 2 = 3. שברים: ${fr(4, 7)} − ${fr(1, 7)} = ${fr(3, 7)}.<div class="eq">${mx(3, 3, 7)}</div>`, v: '' },
+    { t: 'חיסור עם פירוק', p: `<div class="eq">${mx(6, 1, 7)} − ${mx(2, 3, 7)}</div>${fr(1, 7)} קטן מ-${fr(3, 7)}, אז פורקים: ${mx(6, 1, 7)} = 5 + ${fr(8, 7)}.<div class="eq">5 − 2 = 3 &nbsp; ${fr(8, 7)} − ${fr(3, 7)} = ${fr(5, 7)}</div>התשובה: ${M(3, 5, 7)}`, v: vrow(mx(6, 1, 7) + ' − ' + mx(2, 3, 7), numViz(43, 7, A, 17)) } ] },
+  { id: 5, icon: '📖', title: 'בעיות מילוליות', sub: 'פיצות, צבעים ומיץ', gen: genL5, lesson: () => [
+    { t: 'איך פותרים בעיה מילולית?', p: `<div class="tip">1. קוראות לאט ומסמנות את המספרים.<br>2. שואלות: מה צריך למצוא?<br>3. בוחרות פעולה.<br>4. פותרות וכותבות תשובה עם יחידה.</div>`, v: '' },
+    { t: 'איזו פעולה בוחרים?', p: `<b>חיבור:</b> ביחד, בסך הכול, ערבב, הוסיפו.<br><b>חיסור:</b> נשאר, נתנו, שתה, אכלו, בכמה יותר.<br><b>כפל:</b> כמה מכלים כל אחד באותו גודל.<div class="tip">נשאר מ&quot;שלם&quot;? חסרים מ-1, ואז כותבים 1 כמו ${fr('d', 'd')}.</div>`, v: '' } ] },
+  { id: 6, icon: '🚀', title: 'אתגר', sub: 'כפל, סוגריים ותרגילים משולבים', gen: genL6, lesson: () => [
+    { t: 'שבר כפול מספר שלם', p: `כופלים את המונה, והמכנה נשאר.<div class="eq">${fr(2, 5)} × 9 = ${fr(18, 5)} = ${mx(3, 3, 5)}</div>`, v: '' },
+    { t: 'סדר פעולות', p: `סוגריים קודם, אחר כך כפל, ובסוף חיבור וחיסור.<div class="eq">${mx(4, 4, 7)} + 3 × ${fr(2, 7)}</div>קודם 3 × ${fr(2, 7)} = ${fr(6, 7)}. אחר כך ${mx(4, 4, 7)} + ${fr(6, 7)} = ${mx(5, 3, 7)}.`, v: '' } ] }
+];
+
+/* ---------- state ---------- */
+const store = { get() { try { return JSON.parse(localStorage.getItem('fracApp') || '{}'); } catch (e) { return {}; } }, set(v) { try { localStorage.setItem('fracApp', JSON.stringify(v)); } catch (e) {} } };
+let S = Object.assign({ name: '', xp: 0, stars: {}, sound: true }, store.get());
+const save = () => store.set(S);
+let run = null, lesson = null;
+const totalStars = () => Object.values(S.stars).reduce((a, b) => a + b, 0);
+const RANKS = [[0, 'מתחילה'], [100, 'חוקרת שברים'], [300, 'אלופת המכנים'], [600, 'מלכת השברים'], [1000, 'גאון על']];
+const rank = () => RANKS.filter(r => S.xp >= r[0]).pop()[1];
+const starStr = (n, max = 3) => '★'.repeat(n) + `<span class="off">${'★'.repeat(max - n)}</span>`;
+
+/* ---------- effects ---------- */
+let ac;
+function beep(ok) {
+  if (!S.sound) return;
+  try {
+    ac = ac || new (window.AudioContext || window.webkitAudioContext)();
+    const t = ac.currentTime;
+    (ok ? [523, 659, 784] : [233, 196]).forEach((f, i) => {
+      const o = ac.createOscillator(), g = ac.createGain();
+      o.type = 'triangle'; o.frequency.value = f;
+      g.gain.setValueAtTime(.14, t + i * .1); g.gain.exponentialRampToValueAtTime(.001, t + i * .1 + .2);
+      o.connect(g); g.connect(ac.destination); o.start(t + i * .1); o.stop(t + i * .1 + .22);
+    });
+  } catch (e) {}
+}
+function confetti() {
+  if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  const box = document.createElement('div'); box.className = 'confetti';
+  for (let i = 0; i < 22; i++) {
+    const s = document.createElement('span'); s.textContent = pick(['⭐', '🎉', '✨', '🍕', '💛']);
+    s.style.left = ri(4, 94) + '%'; s.style.animationDelay = (Math.random() * .35) + 's'; s.style.setProperty('--dx', ri(-70, 70) + 'px'); box.appendChild(s);
+  }
+  document.body.appendChild(box); setTimeout(() => box.remove(), 2000);
+}
+
+/* ---------- screens ---------- */
+function home() {
+  run = null; lesson = null; window.scrollTo(0, 0);
+  const hello = S.name ? `שלום ${S.name}! מוכנה לשברים?` : 'בואי נלמד שברים ביחד';
+  $app.innerHTML = `
+  <header class="top">
+    <div class="who"><div class="owl">🦉</div><div><h1>שברים בכיף</h1><p>${hello} · ${rank()}</p></div></div>
+    <div class="stats"><span class="pill">⭐ ${totalStars()}</span><span class="pill">✨ ${S.xp}</span>
+    <button class="icon-btn" data-act="sound" aria-label="צלילים">${S.sound ? '🔊' : '🔇'}</button></div>
+  </header>
+  ${S.name ? '' : `<div class="card welcome"><h3>איך קוראים לך?</h3><input id="nm" placeholder="הכתבי את השם שלך" maxlength="20"><button class="solid" data-act="setname">בואי נתחיל</button></div>`}
+  <div class="levels">${LEVELS.map(l => `
+    <article class="lv" style="--lc:var(--l${l.id})">
+      <div class="ic">${l.icon}</div>
+      <div><h3>${l.title}</h3><div class="sub">${l.sub}</div><div class="st" aria-label="${S.stars[l.id] || 0} כוכבים">${starStr(S.stars[l.id] || 0)}</div></div>
+      <div class="btns"><button class="ghost" data-act="lesson" data-id="${l.id}">ללמוד</button><button class="solid" data-act="practice" data-id="${l.id}">לתרגל</button></div>
+    </article>`).join('')}</div>
+  <div class="card test"><h3>🎯 מבדק לדוגמה</h3><p>12 שאלות מכל הנושאים, בלי רמזים, כמו במבדק האמיתי.</p><button class="solid" data-act="test">מתחילות מבדק</button></div>`;
+}
+
+function showLesson() {
+  const L = LEVELS.find(l => l.id === lesson.id), steps = L.lesson(), s = steps[lesson.i], last = lesson.i === steps.length - 1;
+  window.scrollTo(0, 0);
+  $app.innerHTML = `
+  <div class="qtop"><button class="x" data-act="home" aria-label="חזרה">✕</button><h3>${L.icon} ${L.title}</h3></div>
+  <section class="card lesson"><h2>${s.t}</h2><div class="body"><div>${s.p}</div>${s.v ? `<div class="viz">${s.v}</div>` : ''}</div></section>
+  <div class="dots">${steps.map((_, i) => `<i class="${i === lesson.i ? 'on' : ''}"></i>`).join('')}</div>
+  <div class="nav"><button class="ghost" data-act="lprev" ${lesson.i ? '' : 'disabled'}>הקודם</button>
+  ${last ? `<button class="solid" data-act="practice" data-id="${L.id}">בואי נתרגל!</button>` : `<button class="solid" data-act="lnext">הבא</button>`}</div>`;
+}
+
+function startRun(id) {
+  const test = id === 'test';
+  let qs;
+  if (test) qs = [1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6].map(i => LEVELS[i - 1].gen());
+  else { const L = LEVELS.find(l => l.id === id); qs = Array.from({ length: 8 }, L.gen); }
+  run = { id, test, qs, i: 0, score: 0, streak: 0, wrong: [], att: 0, hint: 0, done: false };
+  renderQ();
+}
+
+const field = (id, ph, lab) => `<div class="fld"><input id="${id}" inputmode="numeric" autocomplete="off" maxlength="4" placeholder="${ph}" aria-label="${lab}"></div>`;
+function renderQ() {
+  const q = run.qs[run.i]; run.att = 0; run.hint = 0; run.done = false; window.scrollTo(0, 0);
+  $app.innerHTML = `
+  <div class="qtop"><button class="x" data-act="home" aria-label="יציאה">✕</button>
+  <div class="prog"><i style="width:${run.i / run.qs.length * 100}%"></i></div><span class="cnt">${run.i + 1}/${run.qs.length}</span></div>
+  <section class="card qcard">
+    <div class="bubble"><span class="owl">🦉</span><p>${q.text}</p></div>
+    ${q.expr}
+    <div class="viz" id="viz" hidden>${q.viz}</div>
+    <div class="ansrow">
+      ${field('iw', 'שלם', 'מספר שלם')}
+      <div class="fbox">${field('in', 'מונה', 'מונה')}<hr>${field('id', 'מכנה', 'מכנה')}</div>
+      ${q.unit ? `<span class="unit">${q.unit}</span>` : ''}
+    </div>
+    <div class="alab">שלם בתיבה הראשונה, שבר בשתי התיבות. מספר שלם? רק בראשונה.</div>
+    <div id="fb" class="fb" aria-live="polite"></div>
+    <div class="steps" id="steps"></div>
+    <div class="qbtns"><button id="bcheck" class="solid big" data-act="check">בדקי ✓</button>
+    ${run.test ? '' : '<button id="bhint" class="ghost" data-act="hint">💡 רמז</button>'}</div>
+    ${run.streak >= 2 ? `<div class="streak">🔥 ${run.streak} נכונות ברצף</div>` : ''}
+  </section>`;
+}
+
+function parseAns() {
+  const g = id => document.getElementById(id).value.replace(/\D/g, '');
+  const w = g('iw'), n = g('in'), d = g('id');
+  if (!w && !n && !d) return { err: 'כתבי את התשובה בתיבות.' };
+  if (!!n !== !!d) return { err: 'בשבר צריך גם מונה (למעלה) וגם מכנה (למטה).' };
+  if (d && +d === 0) return { err: 'המכנה לא יכול להיות 0.' };
+  return d ? { N: (+w || 0) * +d + +n, D: +d, fmt: +n >= +d } : { N: +w, D: 1, fmt: false };
+}
+const setFb = (cls, html) => { const f = document.getElementById('fb'); f.className = 'fb ' + cls; f.innerHTML = html; };
+const PRAISE = ['כל הכבוד!', 'מעולה!', 'בדיוק ככה!', 'את אלופה!', 'נכון מאוד!', 'וואו, יפה!'];
+
+function check() {
+  if (run.done) return;
+  const q = run.qs[run.i], r = parseAns();
+  if (r.err) return setFb('warn', r.err);
+  const ok = r.N * q.ans.d === q.ans.n * r.D;
+  if (ok && r.fmt && q.ans.n > q.ans.d && q.ans.n % q.ans.d) return setFb('warn', 'הערך נכון! עכשיו כתבי את זה כמספר מעורב: שלם בתיבה הראשונה ושבר קטן מ-1.');
+  if (ok) {
+    const first = run.att === 0 && run.hint === 0;
+    if (first) { run.score++; run.streak++; S.xp += 10; } else { run.streak = 0; S.xp += 5; }
+    save(); beep(true); confetti();
+    setFb('ok', `${pick(PRAISE)} ${first ? '+10 ✨' : '+5 ✨'}`);
+    return finishQ();
+  }
+  run.att++; run.streak = 0;
+  if (run.test || run.att >= 2) {
+    run.wrong.push(q); beep(false);
+    setFb('no', `לא נורא. התשובה הנכונה: ${ltr(show(q.ans.n, q.ans.d))} ${q.unit}`);
+    document.getElementById('steps').innerHTML = q.steps.map((s, i) => `<div>${i + 1}. ${s}</div>`).join('');
+    return finishQ();
+  }
+  beep(false);
+  setFb('no', 'כמעט! נסי שוב. אפשר ללחוץ על רמז 💡');
+}
+function finishQ() {
+  run.done = true;
+  const b = document.getElementById('bcheck');
+  b.textContent = run.i + 1 === run.qs.length ? 'לסיכום 🏁' : 'לשאלה הבאה ←'; b.dataset.act = 'next';
+  const h = document.getElementById('bhint'); if (h) h.disabled = true;
+  document.querySelectorAll('.ansrow input').forEach(i => i.readOnly = true);
+}
+function hint() {
+  const q = run.qs[run.i], vz = document.getElementById('viz');
+  if (run.hint === 0 && q.viz) vz.hidden = false;
+  if (run.hint < q.steps.length) run.hint++;
+  document.getElementById('steps').innerHTML = q.steps.slice(0, run.hint).map((s, i) => `<div>${i + 1}. ${s}</div>`).join('');
+  if (run.hint >= q.steps.length) document.getElementById('bhint').disabled = true;
+}
+
+function result() {
+  const n = run.qs.length, ratio = run.score / n, pct = Math.round(ratio * 100);
+  let stars = ratio >= .9 ? 3 : ratio >= .75 ? 2 : ratio >= .5 ? 1 : 0;
+  if (!run.test && stars > (S.stars[run.id] || 0)) { S.stars[run.id] = stars; save(); }
+  const msg = stars === 3 ? 'מושלם! את שולטת בנושא 🏆' : stars === 2 ? 'כמעט מושלם. עוד קצת תרגול ואת שם!' : stars === 1 ? 'התחלה טובה. כדאי לעבור שוב על ה"ללמוד" ולנסות שוב.' : 'זה בסדר, כל מומחית התחילה ככה. בואי נחזור על ההסבר ונתרגל שוב.';
+  $app.innerHTML = `
+  <section class="card result">
+    <div class="owl" style="font-size:64px">${stars === 3 ? '🥳' : '🦉'}</div>
+    <h2>${run.test ? 'סיימת את המבדק!' : 'סיימת את הסבב!'}</h2>
+    <div class="bigstars">${starStr(stars)}</div>
+    <div class="score">${run.score} מתוך ${n} נכונות בניסיון ראשון${run.test ? ` (${pct}%)` : ''}</div>
+    <p>${msg}</p>
+    ${run.wrong.length ? `<h3>כדאי לחזור על:</h3><div class="rvlist">${run.wrong.map(q => `<div class="rv">${q.expr || q.text}<div>התשובה: ${ltr(show(q.ans.n, q.ans.d))} ${q.unit}</div></div>`).join('')}</div>` : ''}
+    <div class="nav" style="width:100%"><button class="ghost" data-act="home">לתפריט</button>
+    <button class="solid" data-act="${run.test ? 'test' : 'practice'}" data-id="${run.id}">${run.test ? 'מבדק חדש' : 'עוד סבב'}</button></div>
+  </section>`;
+  if (stars >= 2) confetti();
+  window.scrollTo(0, 0);
+}
+
+/* ---------- events ---------- */
+$app.addEventListener('click', e => {
+  const b = e.target.closest('[data-act]'); if (!b) return;
+  const id = +b.dataset.id || b.dataset.id;
+  switch (b.dataset.act) {
+    case 'home': home(); break;
+    case 'setname': { const v = document.getElementById('nm').value.trim(); if (v) { S.name = v; save(); home(); } break; }
+    case 'sound': S.sound = !S.sound; save(); b.textContent = S.sound ? '🔊' : '🔇'; beep(true); break;
+    case 'lesson': lesson = { id, i: 0 }; showLesson(); break;
+    case 'lnext': lesson.i++; showLesson(); break;
+    case 'lprev': lesson.i--; showLesson(); break;
+    case 'practice': startRun(id); break;
+    case 'test': startRun('test'); break;
+    case 'check': check(); break;
+    case 'hint': hint(); break;
+    case 'next': run.i++; run.i >= run.qs.length ? result() : renderQ(); break;
+  }
+});
+$app.addEventListener('keydown', e => {
+  if (e.key !== 'Enter' || !run) return;
+  const b = document.getElementById('bcheck'); if (b) b.click();
+});
+$app.addEventListener('input', e => { if (e.target.matches('.ansrow input')) e.target.value = e.target.value.replace(/\D/g, ''); });
+
+home();
+</script>
